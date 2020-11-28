@@ -1,7 +1,28 @@
+* {
+    box-sizing: border-box;
+}
+
 .game-title {
     text-align: center;
 }
 
 .instructions {
     text-align: center;
+}
+
+.game-wrapper {
+    width: 80%;
+    margin: 10px auto;
+    padding: 10px;
+    background-color: gray;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.square {
+    display: inline-block;
+    margin: 10px;
+    /* background-color: rgb(228, 198, 159); */
+    height: 110px;
+    width: 110px;
 }
