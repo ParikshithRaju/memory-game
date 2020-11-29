@@ -2,6 +2,7 @@ import React,{useState,useEffect} from 'react';
 
 
 import {myUtils} from '../my_utils';
+import SquareDisplay from './squareDisplayComponent';
 
 
 const utils = new myUtils();
@@ -18,18 +19,14 @@ const initalGameState = utils.arrayOfColors(12).map(
     }
 );
 
-function Square(props) {
-    return(
-    <button className="square" 
-    style={props.squareObj.matched ? {backgroundColor: 'gray'} : props.squareObj.clicked ? {backgroundColor: props.squareObj.color} : {}} 
-    key={props.id}
-    onClick = {()=> props.onClick(props.id)}>
-    </button>
-    );
-}
+
 
 export default function Game(props) {
     const [squares,setSquares] = useState(initalGameState);
+    const [gameStatus,setGameStatus] = useState("not-started");
+    const [timeElapsed,setTimeElapsed] = useState(0);
+    const [timeStart,setTimeStart] = useState(0);
+    const [timerId,setTimerId] = useState(0);
 
     useEffect(()=>{
 
@@ -88,7 +85,35 @@ export default function Game(props) {
                     clickedSquares.length = 0;
             }
         }
-    });
+    },[squares]);
+
+    useEffect(()=>{
+        if(gameStatus === "started")
+        {
+        const _timerId = setInterval(() => {
+            setTimeElapsed(Date.now()-timeStart);
+            }, 10);
+            setTimerId(_timerId);
+        }
+    },[gameStatus,timeStart])
+
+
+    const startTimer = () => {
+        setTimeStart(Date.now());
+    }
+
+
+    const stopTimer = () => {
+        console.log(timerId);
+        clearInterval(timerId);
+    }
+
+
+    const startGame = () => {
+        startTimer();
+        setGameStatus("started");
+    }
+
 
     const clickHandler = (ind) => {
         if(squares[ind].matched)
@@ -113,11 +138,31 @@ export default function Game(props) {
         setSquares(newState);
     }
 
+
+    const gameIsCompleted = squares.filter(square => !square.matched).length === 0;
+
+    if(gameIsCompleted)
+    {
+        stopTimer();
+    }
+
+    let centiseconds = ("0" + (Math.floor(timeElapsed / 10) % 100)).slice(-2);
+    let seconds = ("0" + (Math.floor(timeElapsed / 1000) % 60)).slice(-2);
+    let minutes = ("0" + (Math.floor(timeElapsed / 60000) % 60)).slice(-2);
+
     return(
-        <div className="game-wrapper">
-            {squares.map(
-                (square,i) => <Square squareObj={square} id={i} onClick={clickHandler}/>
-            )}
-        </div>
+        <>
+
+            {gameStatus === "started" && !gameIsCompleted ? <div className="timeDisplay">{minutes} : {seconds} : {centiseconds}</div> : ""}
+            <div className="game-wrapper">
+                { 
+                    gameStatus==="not-started" ? <button onClick={startGame}>Start Game</button> : 
+                    gameIsCompleted ? <div> Time taken {minutes} : {seconds} : {centiseconds} </div> : <SquareDisplay 
+                                                                                timeElapsed = {timeElapsed}
+                                                                                squares = {squares}
+                                                                                clickHandler = {clickHandler}/>
+                }
+            </div>
+        </>
     );
 }

@@ -6,9 +6,9 @@ export default function Header(props) {
             <h1 className="game-title">
                 Memory Game
             </h1>            
-            <div className="instructions">
-                Match all the cards within the given time.
-            </div>            
+            <h3 className="instructions">
+                Match all the cards
+            </h3>            
         </>
     );
 }
