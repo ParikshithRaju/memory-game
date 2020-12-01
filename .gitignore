@@ -25,4 +25,4 @@ yarn-error.log*
 
 
 #secret
-./src/secretStuff.js
+src/secretStuff.js
