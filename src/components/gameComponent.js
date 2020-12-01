@@ -3,6 +3,9 @@ import React,{useState,useEffect} from 'react';
 
 import {myUtils} from '../my_utils';
 import SquareDisplay from './squareDisplayComponent';
+import TopTenForm from './topTenFormComponent';
+
+import {db} from '../firebase';
 
 
 const utils = new myUtils();
@@ -27,6 +30,7 @@ export default function Game(props) {
     const [timeElapsed,setTimeElapsed] = useState(0);
     const [timeStart,setTimeStart] = useState(0);
     const [timerId,setTimerId] = useState(0);
+    const [crackedTopTen,setCrackedTopTen] = useState(false);
 
     useEffect(()=>{
 
@@ -104,7 +108,6 @@ export default function Game(props) {
 
 
     const stopTimer = () => {
-        console.log(timerId);
         clearInterval(timerId);
     }
 
@@ -140,10 +143,37 @@ export default function Game(props) {
 
 
     const gameIsCompleted = squares.filter(square => !square.matched).length === 0;
+    let lowestScoreKey;
+    let numOfScores;
+
+
 
     if(gameIsCompleted)
     {
-        stopTimer();
+            stopTimer();
+            db.ref("/timesTaken").once("value",snapshot=>{
+                numOfScores=snapshot.numChildren();
+                if(numOfScores === 10) {
+                    db.ref("/timesTaken").orderByChild("timeTaken").limitToLast(1).once("value",snapshot=>{
+                        let lowestTime;
+                        snapshot.forEach((csnap)=>{
+                            lowestTime = csnap.val()["timeTaken"];
+                            lowestScoreKey = csnap.key;
+                        })
+                        if(timeElapsed<lowestTime) {
+                            setCrackedTopTen(true);
+                            db.ref(`timesTaken/${lowestScoreKey}`).remove();
+                        }
+                        else {
+                            setCrackedTopTen(false);
+                        }
+                    })
+                }
+                else {
+                    setCrackedTopTen(true);
+                }
+        });
+
     }
 
     let centiseconds = ("0" + (Math.floor(timeElapsed / 10) % 100)).slice(-2);
@@ -154,15 +184,21 @@ export default function Game(props) {
         <>
 
             {gameStatus === "started" && !gameIsCompleted ? <div className="timeDisplay">{minutes} : {seconds} : {centiseconds}</div> : ""}
-            <div className="game-wrapper">
-                { 
-                    gameStatus==="not-started" ? <button onClick={startGame}>Start Game</button> : 
-                    gameIsCompleted ? <div> Time taken {minutes} : {seconds} : {centiseconds} </div> : <SquareDisplay 
-                                                                                timeElapsed = {timeElapsed}
-                                                                                squares = {squares}
-                                                                                clickHandler = {clickHandler}/>
-                }
-            </div>
+            {gameStatus==="not-started" ? <div className="start-btn">
+                                                <button onClick={startGame}>Start Game</button>
+                                            </div> : <></>}
+            {
+                gameIsCompleted ? ( crackedTopTen ? <><TopTenForm timeTaken = {timeElapsed}/> </>
+                    : <div className="sorry-text">Sorry you did not crack the top ten <br/>You took {minutes} : {seconds} : {centiseconds} </div> ) : 
+                                                            gameStatus === "started" ? 
+                                                            <div className="game-wrapper">
+                                                                <SquareDisplay 
+                                                                timeElapsed = {timeElapsed}
+                                                                squares = {squares}
+                                                                clickHandler = {clickHandler}/>
+                                                            </div> 
+                                                            : <></>
+            }
         </>
     );
 }

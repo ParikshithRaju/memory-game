@@ -30,3 +30,20 @@
     height: 110px;
     width: 110px;
 }
+
+.score-name {
+    font-size: larger;
+    font-weight: bolder;
+}
+
+.input-form {
+    text-align: center;
+}
+
+.start-btn {
+    text-align: center;
+}
+
+.sorry-text {
+    text-align: center;
+}
